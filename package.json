@@ -1,0 +1,27 @@
+{
+  "name": "dailydietapi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "knex": "node --import tsx ./node_modules/.bin/knex"
+  },
+  "keywords": [],
+  "author": "Guilherme Moreno",
+  "license": "ISC",
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "zod": "^4.3.6"
+  },
+  "dependencies": {
+    "fastify": "^5.7.2",
+    "knex": "^3.1.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "supertest": "^7.2.2",
+    "vitest": "^4.0.18"
+  }
+}
