@@ -49,4 +49,27 @@ export async function dietRoutes(app: FastifyInstance) {
 
     return reply.status(200).send({ meals });
   });
+
+  app.put("/:id", async (request, reply) => {
+    const updateDietParamsSchema = z.object({
+      id: z.coerce.number(),
+    });
+
+    const { id } = updateDietParamsSchema.parse(request.params);
+
+    const updateDietBodySchema = z.object({
+      nome: z.string(),
+      descricao: z.string(),
+      data: z.string().datetime({ offset: true }),
+      is_diet: z.boolean().default(true),
+    });
+
+    const { nome, descricao, data, is_diet } = updateDietBodySchema.parse(
+      request.body
+    );
+
+    await db("diet").where("id", id).update({ nome, descricao, data, is_diet });
+
+    return reply.status(204).send();
+  });
 }
