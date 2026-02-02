@@ -4,26 +4,34 @@ import { db } from "../database";
 import { randomUUID } from "node:crypto";
 export async function usersRoutes(app: FastifyInstance) {
   app.post("/", async (request, reply) => {
-    const userSchema = z.object({
-      name: z.string(),
-      email: z.string().email(),
-    });
-
-    const { name, email } = userSchema.parse(request.body);
-
-    let sessionId = request.cookies.sessionId;
-
-    if (!sessionId) {
-      sessionId = randomUUID();
-      reply.cookie("sessionId", sessionId, {
-        path: "/",
-        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+    try {
+      const userSchema = z.object({
+        name: z.string(),
+        email: z.string().email(),
       });
+
+      const { name, email } = userSchema.parse(request.body);
+
+      let sessionId = request.cookies?.sessionId;
+
+      if (!sessionId) {
+        sessionId = randomUUID();
+        reply.cookie("sessionId", sessionId, {
+          path: "/",
+          maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+        });
+      }
+
+      await db("users").insert({ name, email, session_id: sessionId });
+
+      return reply.status(201).send();
+    } catch (error) {
+      return reply
+        .status(error instanceof z.ZodError ? 400 : 500)
+        .send({
+          error: error instanceof Error ? error.message : String(error),
+        });
     }
-
-    await db("users").insert({ name, email, session_id: sessionId });
-
-    return reply.status(201).send();
   });
 
   app.get("/:id", async (request, reply) => {
@@ -40,5 +48,10 @@ export async function usersRoutes(app: FastifyInstance) {
     }
 
     return reply.status(200).send(user);
+  });
+
+  app.get("/", async (request, reply) => {
+    const users = await db.select("*").from("users");
+    return reply.status(200).send(users);
   });
 }
