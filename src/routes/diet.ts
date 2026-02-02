@@ -8,14 +8,14 @@ export async function dietRoutes(app: FastifyInstance) {
 
   app.post("/", async (request, reply) => {
     try {
-      const createDietSchema = z.object({
+      const createDieSchema = z.object({
         nome: z.string(),
         descricao: z.string(),
         data: z.string().datetime(),
         is_diet: z.boolean().default(true),
       });
 
-      const { nome, descricao, data, is_diet } = createDietSchema.parse(
+      const { nome, descricao, data, is_diet } = createDieSchema.parse(
         request.body
       );
 
@@ -87,5 +87,106 @@ export async function dietRoutes(app: FastifyInstance) {
     await db("diet").where("id", id).update({ nome, descricao, data, is_diet });
 
     return reply.status(204).send();
+  });
+
+  app.delete("/:id", async (request, reply) => {
+    const deleteDietParamsSchema = z.object({
+      id: z.coerce.number(),
+    });
+
+    const { id } = deleteDietParamsSchema.parse(request.params);
+
+    await db("diet").where("id", id).delete();
+
+    return reply.status(204).send();
+  });
+
+  app.get("/:id", async (request, reply) => {
+    const getDietParamsSchema = z.object({
+      id: z.coerce.number(),
+    });
+
+    const { id } = getDietParamsSchema.parse(request.params);
+
+    const diet = await db("diet").where("id", id).first();
+
+    return reply.status(200).send(diet);
+  });
+
+  app.get("/summary_total_refeicao", async (request, reply) => {
+    const sessionId = request.cookies?.sessionId;
+    const user = await db("users")
+      .where("session_id", sessionId)
+      .select("id")
+      .first();
+
+    if (!user) {
+      return reply.status(401).send({ error: "Unauthorized" });
+    }
+
+    const summaryQtdTotalRefeicaoPorUser = await db("diet")
+      .count("id")
+      .where("user_id", user.id);
+
+    return reply.status(200).send(summaryQtdTotalRefeicaoPorUser);
+  });
+
+  app.get("/summary_total_refeicao_diet", async (request, reply) => {
+    const sessionId = request.cookies?.sessionId;
+    const user = await db("users")
+      .where("session_id", sessionId)
+      .select("id")
+      .first();
+
+    if (!user) {
+      return reply.status(401).send({ error: "Unauthorized" });
+    }
+
+    const summaryQtdTotalRefeicaoDietPorUser = await db("diet")
+      .count("id")
+      .where("user_id", user.id)
+      .where("is_diet", true);
+
+    return reply.status(200).send(summaryQtdTotalRefeicaoDietPorUser);
+  });
+
+  app.get("/summary_total_refeicao_nao_diet", async (request, reply) => {
+    const sessionId = request.cookies?.sessionId;
+    const user = await db("users")
+      .where("session_id", sessionId)
+      .select("id")
+      .first();
+
+    if (!user) {
+      return reply.status(401).send({ error: "Unauthorized" });
+    }
+
+    const summaryQtdTotalRefeicaoNaoDietPorUser = await db("diet")
+      .count("id")
+      .where("user_id", user.id)
+      .where("is_diet", false);
+
+    return reply.status(200).send(summaryQtdTotalRefeicaoNaoDietPorUser);
+  });
+
+  app.get("/summary_best_sequence_diet", async (request, reply) => {
+    const sessionId = request.cookies?.sessionId;
+    const user = await db("users")
+      .where("session_id", sessionId)
+      .select("id")
+      .first();
+
+    if (!user) {
+      return reply.status(401).send({ error: "Unauthorized" });
+    }
+
+    const summaryBestSequenceDietPorUser = await db("diet")
+      .where("user_id", user.id)
+      .where("is_diet", true)
+      .orderBy("data", "asc")
+      .select("data")
+      .limit(1);
+
+    return reply.status(200).send(summaryBestSequenceDietPorUser);
   });
 }
