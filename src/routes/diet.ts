@@ -8,14 +8,14 @@ export async function dietRoutes(app: FastifyInstance) {
 
   app.post("/", async (request, reply) => {
     try {
-      const createDieSchema = z.object({
+      const createDietSchema = z.object({
         nome: z.string(),
         descricao: z.string(),
         data: z.string().datetime(),
         is_diet: z.boolean().default(true),
       });
 
-      const { nome, descricao, data, is_diet } = createDieSchema.parse(
+      const { nome, descricao, data, is_diet } = createDietSchema.parse(
         request.body
       );
 
